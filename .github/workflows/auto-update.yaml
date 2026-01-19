@@ -1,0 +1,109 @@
+name: Auto Update CLIProxyAPI
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Get current addon version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep "^version:" HACLIProxyAPI/config.yaml | sed 's/version: "\(.*\)"/\1/')
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current addon version: $CURRENT_VERSION"
+
+      - name: Get latest CLIProxyAPI release
+        id: latest_release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/router-for-me/CLIProxyAPI/releases/latest | jq -r .tag_name)
+          LATEST_VERSION=${LATEST_RELEASE#v}  # Remove 'v' prefix if present
+          echo "tag=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest CLIProxyAPI release: $LATEST_RELEASE ($LATEST_VERSION)"
+
+      - name: Check if update is needed
+        id: check_update
+        run: |
+          CURRENT="${{ steps.current_version.outputs.version }}"
+          LATEST="${{ steps.latest_release.outputs.version }}"
+
+          echo "Comparing versions:"
+          echo "  Current addon version: $CURRENT"
+          echo "  Latest upstream version: $LATEST"
+
+          if [ "$CURRENT" = "$LATEST" ]; then
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "No update needed - versions match"
+          else
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "Update needed - new version detected"
+          fi
+
+      - name: Update config version
+        if: steps.check_update.outputs.needs_update == 'true'
+        run: |
+          NEW_VERSION="${{ steps.latest_release.outputs.version }}"
+
+          # Update version in config.yaml to match upstream
+          sed -i "s/^version: \".*\"/version: \"$NEW_VERSION\"/" HACLIProxyAPI/config.yaml
+
+          echo "Updated config.yaml to version $NEW_VERSION"
+
+      - name: Create Pull Request
+        if: steps.check_update.outputs.needs_update == 'true'
+        uses: peter-evans/create-pull-request@v7.0.5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: update to CLIProxyAPI ${{ steps.latest_release.outputs.tag }}
+
+            Automated update to match upstream CLIProxyAPI release ${{ steps.latest_release.outputs.tag }}.
+
+            Addon version updated to ${{ steps.latest_release.outputs.version }}.
+          branch: auto-update-${{ steps.latest_release.outputs.version }}
+          delete-branch: true
+          title: "Update to CLIProxyAPI ${{ steps.latest_release.outputs.tag }}"
+          body: |
+            ## Automated Update
+
+            This PR updates the addon to use the latest CLIProxyAPI release.
+
+            ### Changes
+            - **Upstream Version**: ${{ steps.latest_release.outputs.tag }}
+            - **New Addon Version**: ${{ steps.latest_release.outputs.version }}
+            - **Previous Addon Version**: ${{ steps.current_version.outputs.version }}
+
+            ### Release Notes
+            Check the [upstream release notes](https://github.com/router-for-me/CLIProxyAPI/releases/tag/${{ steps.latest_release.outputs.tag }}) for details on what's new.
+
+            ### What happens next?
+            1. Review the changes in this PR
+            2. Merge this PR to trigger the builder workflow
+            3. The builder will create new Docker images with the updated CLIProxyAPI binary
+            4. Users will see the update available in their Home Assistant add-on store
+
+            ---
+            *This PR was created automatically by the Auto Update workflow*
+          labels: |
+            automated
+            dependencies
+            enhancement
+
+      - name: Summary
+        if: steps.check_update.outputs.needs_update == 'false'
+        run: |
+          echo "✅ No update needed - already at latest version (${{ steps.latest_release.outputs.tag }})"
