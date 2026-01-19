@@ -1,0 +1,7 @@
+configuration:
+  session_key:
+    name: Session Key
+    description: "Authentication credentials in JSON format. See the Documentation tab above for the docker command to obtain this."
+  log_level:
+    name: Log Level
+    description: "The log level for the add-on (debug, info, warning, or error)"
