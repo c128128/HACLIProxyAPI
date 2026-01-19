@@ -1,12 +1,21 @@
-# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-dockerfile
 ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM ${BUILD_FROM}
 
-# Execute during the build of the image
-ARG TEMPIO_VERSION BUILD_ARCH
-RUN \
-    curl -sSLf -o /usr/bin/tempio \
-    "https://github.com/home-assistant/tempio/releases/download/${TEMPIO_VERSION}/tempio_${BUILD_ARCH}"
+# Install runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    jq
 
-# Copy root filesystem
-COPY rootfs /
+# Set working directory for CLIProxyAPI files
+WORKDIR /data
+
+# Copy CLIProxyAPI binary from official image
+COPY --from=eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI ./CLIProxyAPI
+
+# Copy config and run script
+COPY CLIProxyAPI.yaml ./config.yaml
+COPY run.sh ./run.sh
+RUN chmod +x ./run.sh
+
+# Set entrypoint
+CMD ["/data/run.sh"]

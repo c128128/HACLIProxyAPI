@@ -1,15 +1,10 @@
-<!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
-
-## 1.2.0
-
-- Add an apparmor profile
-- Update to 3.15 base image with s6 v3
-- Add a sample script to run as service and constrain in aa profile
-
-## 1.1.0
-
-- Updates
+# Changelog
 
 ## 1.0.0
 
 - Initial release
+- Support for aarch64, amd64, armhf, armv7, and i386 architectures
+- Configurable OpenAI session key authentication
+- Configurable log levels (debug, info, warning, error)
+- CLIProxyAPI running on port 8787
+- Automatic auth file creation and validation

@@ -1,17 +1,22 @@
-# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
-name: Example add-on
-version: "1.2.0"
-slug: example
-description: Example add-on
-url: "https://github.com/home-assistant/addons-example/tree/main/example"
+name: HACLIProxyAPI
+version: "1.0.0"
+slug: HACLIProxyAPI
+description: CLIProxyAPI running in Home Assistant.
 arch:
   - aarch64
   - amd64
+  - armhf
+  - armv7
+  - i386
 init: false
-map:
-  - share:rw
+startup: services
+ports:
+  8787/tcp: 8787
+ports_description:
+  8787/tcp: HACLIProxyAPI port
 options:
-  message: "Hello world..."
+  openai_session_key: ""
+  log_level: "info"
 schema:
-  message: "str?"
-image: "ghcr.io/home-assistant/{arch}-addon-example"
+  openai_session_key: str
+  log_level: list(debug|info|warning|error)?
