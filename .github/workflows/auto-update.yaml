@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v6.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Get current addon version
         id: current_version
@@ -67,7 +68,7 @@ jobs:
         if: steps.check_update.outputs.needs_update == 'true'
         uses: peter-evans/create-pull-request@v7.0.5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           commit-message: |
             chore: update to CLIProxyAPI ${{ steps.latest_release.outputs.tag }}
 
