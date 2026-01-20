@@ -1,5 +1,5 @@
 name: HACLIProxyAPI
-version: "6.7.11"
+version: "6.7.12"
 slug: hacliproxyapi
 description: CLIProxyAPI running in Home Assistant.
 url: https://github.com/c128128/HACLIProxyAPI
