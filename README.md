@@ -53,9 +53,8 @@ For other providers (Claude, Gemini, Qwen), check the [official documentation](h
 
 1. Go to the Configuration tab in the add-on
 2. Paste the entire JSON content from the session key file into the **Session Key** field
-3. Choose your preferred log level (info, debug, warning, or error)
-4. Save the configuration
-5. Start the add-on
+3. Save the configuration
+4. Start the add-on
 
 ## Usage
 
